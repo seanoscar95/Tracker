@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101319">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Life Tracker</title>
+<style>
+:root{
+ --bg:#0b0d12;--panel:#131820;--panel2:#1a202a;--line:#2a3340;--text:#f6f7fb;--muted:#9ba6b6;
+ --accent:#f3aac8;--good:#76d6a7;--warn:#f3c96f;--bad:#ff8181;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#080b10,#0d1117 50%,#0b0d12);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+.app{max-width:900px;margin:auto;padding:16px 14px 108px}
+header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin:4px 0 16px}
+h1{margin:0;font-size:30px;letter-spacing:-.04em}
+h2{font-size:18px;margin:0 0 12px}
+h3{font-size:14px;margin:0 0 8px}
+.muted{color:var(--muted)} .small{font-size:12px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018));border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:13px;box-shadow:0 16px 44px rgba(0,0,0,.22)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.metric{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:12px}
+.metric b{font-size:23px;display:block}.metric span{font-size:11px;color:var(--muted)}
+.big{font-size:42px;font-weight:900;letter-spacing:-.05em}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.stack{display:grid;gap:9px}
+.bar{height:11px;background:#252d38;border-radius:999px;overflow:hidden}
+.fill{height:100%;background:linear-gradient(90deg,var(--accent),#ffd8e7);border-radius:inherit;transition:.2s}
+button,.btn{border:0;border-radius:13px;padding:10px 13px;background:var(--accent);color:#1c1217;font-weight:800;cursor:pointer}
+button.secondary,.btn.secondary{background:#222936;color:var(--text);border:1px solid var(--line)}
+button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+button.danger{background:#402328;color:#ffb3b3;border:1px solid #71383e}
+.controls{display:flex;gap:8px;flex-wrap:wrap}.controls button{flex:1}
+input,select,textarea{width:100%;background:#0f141b;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:10px 11px;outline:none}
+textarea{min-height:82px;resize:vertical}
+label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px}
+.page{display:none}.page.active{display:block}
+.nav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,13,18,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);z-index:30}
+.navin{max-width:900px;margin:auto;display:grid;grid-template-columns:repeat(7,1fr)}
+.nav button{background:transparent;color:var(--muted);padding:13px 3px;border-radius:0;font-size:10px}.nav button.active{color:var(--accent)}
+.hero{display:grid;grid-template-columns:180px 1fr;gap:16px;align-items:center}
+.avatarStage{height:230px;display:grid;place-items:center;border-radius:20px;background:radial-gradient(circle at 50% 35%,#2b3240,#151a23 72%);border:1px solid var(--line)}
+.avatar{width:150px;height:210px;position:relative}
+.head{position:absolute;width:116px;height:106px;border-radius:48% 48% 45% 45%;left:17px;top:18px;background:var(--skin);z-index:4}
+.eye{position:absolute;width:17px;height:22px;border-radius:50%;background:#111;top:57px;z-index:6}.eye.l{left:42px}.eye.r{right:42px}.eye:after{content:"";position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;left:4px;top:4px}
+.brow{position:absolute;width:24px;height:4px;border-radius:5px;background:var(--hair);top:50px;z-index:7}.brow.l{left:35px}.brow.r{right:35px}
+.mouth{position:absolute;width:22px;height:8px;border-bottom:3px solid #6d3c46;border-radius:50%;left:64px;top:96px;z-index:6}
+.hair{position:absolute;left:17px;top:7px;width:116px;height:55px;background:var(--hair);border-radius:55% 55% 25% 25%;z-index:8}
+.hair.spiky{clip-path:polygon(0 80%,8% 30%,20% 55%,32% 10%,45% 55%,58% 0,68% 50%,82% 18%,91% 55%,100% 35%,100% 100%,0 100%)}
+.hair.side{border-radius:60% 45% 30% 20%;transform:skewX(-8deg)}
+.hair.buzz{height:31px;top:14px;border-radius:50% 50% 35% 35%}
+.body{position:absolute;width:84px;height:79px;background:var(--shirt);left:33px;top:123px;border-radius:26px 26px 18px 18px;z-index:2}
+.legs:before,.legs:after{content:"";position:absolute;top:191px;width:30px;height:17px;background:var(--pants);border-radius:4px;z-index:1}.legs:before{left:39px}.legs:after{right:39px}
+.glasses{display:none;position:absolute;top:53px;left:29px;width:92px;height:25px;z-index:9}.glasses.on{display:block}.glasses:before,.glasses:after{content:"";position:absolute;width:30px;height:21px;border:3px solid #303742;border-radius:8px}.glasses:before{left:0}.glasses:after{right:0}.glasses i{position:absolute;left:34px;top:10px;width:24px;height:3px;background:#303742}
+.hat{display:none;position:absolute;left:25px;top:0;width:100px;height:28px;background:var(--hat);border-radius:50% 50% 20% 20%;z-index:10}.hat.on{display:block}.hat:after{content:"";position:absolute;right:-18px;bottom:-4px;width:54px;height:9px;background:var(--hat);border-radius:10px}
+.beard{display:none;position:absolute;left:47px;top:87px;width:57px;height:30px;background:var(--hair);border-radius:8px 8px 26px 26px;opacity:.9;z-index:5}.beard.on{display:block}
+.badge{display:none;position:absolute;right:30px;top:143px;width:20px;height:20px;border-radius:50%;background:#ffd767;border:2px solid #fff1af;z-index:5}.badge.on{display:block}
+.sectionTitle{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:10px}
+.log{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.log:last-child{border-bottom:0}
+.chart{height:145px;display:flex;align-items:flex-end;gap:8px}.col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px}.col .v{width:100%;max-width:30px;background:linear-gradient(180deg,#ffd9e8,var(--accent));border-radius:7px 7px 3px 3px;min-height:2px}.col span{font-size:10px;color:var(--muted)}
+.goal{padding:13px;border:1px solid var(--line);background:var(--panel2);border-radius:16px}
+.tabs{display:flex;gap:7px;overflow:auto;padding-bottom:3px;margin-bottom:12px}.tabs button{white-space:nowrap;background:#202733;color:var(--muted)}.tabs button.active{background:var(--accent);color:#1c1217}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;place-items:center;padding:18px;z-index:50}.modal.open{display:grid}.modalbox{width:min(620px,100%);max-height:88vh;overflow:auto;background:#11161d;border:1px solid var(--line);border-radius:22px;padding:17px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}
+.calendar-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dow{text-align:center;color:var(--muted);font-size:11px;padding:4px 0}
+.day{aspect-ratio:1/1;min-height:54px;border:1px solid var(--line);border-radius:12px;background:#121821;padding:7px;position:relative;cursor:pointer}
+.day.empty{opacity:.25}.day.today{outline:2px solid var(--accent)}.day.selected{background:#2a2230}
+.day .num{font-size:12px;font-weight:700}.day .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);position:absolute;bottom:7px;right:7px}
+.schedule-item{display:grid;grid-template-columns:72px 1fr auto;gap:10px;align-items:center;padding:11px;background:var(--panel2);border:1px solid var(--line);border-radius:15px}
+.schedule-item.done{opacity:.55}.time{font-weight:800;font-size:13px}
+.priority{font-size:10px;padding:5px 7px;border-radius:999px;background:#272f3b;color:#dce3ec}
+.priority.high{background:#49262c;color:#ffc3c3}.priority.low{background:#223b32;color:#b9f0d2}
+.task-title{font-weight:750}.task-meta{font-size:11px;color:var(--muted);margin-top:3px}
+@media(max-width:620px){
+ .hero{grid-template-columns:1fr}.grid4{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:1fr 1fr}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.nav button{font-size:8.5px;padding-left:1px;padding-right:1px}
+ .schedule-item{grid-template-columns:60px 1fr auto}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div><h1>Life Tracker</h1><div class="muted small" id="dateLabel"></div></div><div class="muted small">Offline • Private • No subscription</div></header>
+
+<section class="page active" id="home">
+ <div class="card hero">
+   <div class="avatarStage"><div class="avatar">
+    <div class="hair" data-hair></div><div class="head"></div><div class="brow l"></div><div class="brow r"></div><div class="eye l"></div><div class="eye r"></div><div class="mouth"></div><div class="beard" data-beard></div><div class="glasses" data-glasses><i></i></div><div class="hat" data-hat></div><div class="body"></div><div class="legs"></div><div class="badge" data-badge></div>
+   </div></div>
+   <div><div class="muted small">TODAY</div><div class="big"><span id="score">0</span>%</div><div class="bar"><div id="scoreBar" class="fill"></div></div><p class="muted small" id="coach"></p></div>
+ </div>
+ <div class="grid4">
+   <div class="metric"><b id="smokeHome">0</b><span>Cigarettes</span></div>
+   <div class="metric"><b id="calHome">0</b><span>Calories</span></div>
+   <div class="metric"><b id="habitHome">0/0</b><span>Habits</span></div>
+   <div class="metric"><b id="scheduleHome">0/0</b><span>Schedule done</span></div>
+ </div>
+ <div class="card" style="margin-top:13px"><h2>Life pillars</h2><div class="grid3" id="pillarGrid"></div></div>
+ <div class="card"><h2>Today's agenda</h2><div id="agendaPreview" class="stack"></div></div>
+ <div class="card"><h2>7-day progress</h2><div class="chart" id="weekChart"></div></div>
+</section>
+
+<section class="page" id="planner">
+ <div class="card">
+   <div class="calendar-head">
+     <button class="secondary" onclick="changeMonth(-1)">‹</button>
+     <div style="text-align:center"><h2 id="calendarTitle" style="margin:0"></h2><div class="muted small">Tap a date to view or edit its schedule.</div></div>
+     <button class="secondary" onclick="changeMonth(1)">›</button>
+   </div>
+   <div class="calendar-grid" id="calendarGrid"></div>
+ </div>
+ <div class="card">
+   <div class="sectionTitle"><div><h2 id="selectedDateTitle">Daily schedule</h2><div class="muted small">Time blocks, tasks, appointments, and priorities.</div></div><button onclick="openTaskModal()">+ Add</button></div>
+   <div id="scheduleList" class="stack"></div>
+ </div>
+</section>
+
+<section class="page" id="track">
+ <div class="tabs">
+  <button class="active" data-tab="daily">Daily</button><button data-tab="smoking">Smoking</button><button data-tab="food">Calories</button><button data-tab="health">Health</button><button data-tab="money">Money</button>
+ </div>
+ <div id="dailyTab" class="tabpane">
+   <div class="card"><div class="sectionTitle"><div><h2>Daily habits</h2><div class="muted small">Tap a habit to mark it complete.</div></div><button onclick="addHabitPrompt()">+ Add</button></div><div id="habitList" class="stack"></div></div>
+   <div class="card"><h2>Daily check-in</h2><div class="formgrid">
+    <div><label>Mood 1–10</label><input type="number" min="1" max="10" id="mood"></div>
+    <div><label>Energy 1–10</label><input type="number" min="1" max="10" id="energy"></div>
+    <div><label>Focus 1–10</label><input type="number" min="1" max="10" id="focus"></div>
+    <div><label>Sleep hours</label><input type="number" min="0" step=".25" id="sleep"></div>
+    <div class="full"><label>Daily note</label><textarea id="note" placeholder="What went well? What needs attention?"></textarea></div>
+    <div class="full"><button style="width:100%" onclick="saveCheckin()">Save check-in</button></div>
+   </div></div>
+ </div>
+ <div id="smokingTab" class="tabpane" style="display:none">
+   <div class="card"><h2>Smoking tracker</h2><div class="grid2"><div><label>Today</label><div class="big" id="smokeBig">0</div></div><div><label>Daily limit / reduction target</label><input type="number" min="0" id="smokeGoal" onchange="saveSmokeGoal()"></div></div><div class="controls" style="margin-top:12px"><button onclick="addSmoke()">+ Cigarette</button><button class="secondary" onclick="removeSmoke()">− 1</button></div><div class="bar" style="margin-top:14px"><div id="smokeBar" class="fill"></div></div><div id="smokeNote" class="small muted" style="margin-top:7px"></div></div>
+   <div class="card"><h2>Last 7 days</h2><div id="smokeHistory" class="stack"></div></div>
+ </div>
+ <div id="foodTab" class="tabpane" style="display:none">
+   <div class="card"><div class="grid2"><div><label>Daily calorie target</label><input type="number" min="0" id="calGoal" onchange="saveCalGoal()"></div><div><label>Total today</label><div class="big" id="calBig">0</div></div></div><div class="bar" style="margin-top:13px"><div id="calBar" class="fill"></div></div></div>
+   <div class="card"><h2>Add food</h2><div class="formgrid"><div><label>Food / meal</label><input id="foodName"></div><div><label>Calories</label><input id="foodCals" type="number" min="0"></div><div class="full"><button style="width:100%" onclick="addFood()">Add food</button></div></div></div>
+   <div class="card"><h2>Today's food log</h2><div id="foodLog"></div></div>
+ </div>
+ <div id="healthTab" class="tabpane" style="display:none">
+  <div class="card"><h2>Health metrics</h2><div class="formgrid">
+   <div><label>Weight (kg)</label><input type="number" step=".1" id="weight"></div>
+   <div><label>Steps</label><input type="number" id="steps"></div>
+   <div><label>Exercise minutes</label><input type="number" id="exercise"></div>
+   <div><label>Water (glasses)</label><input type="number" id="water"></div>
+   <div class="full"><button style="width:100%" onclick="saveHealth()">Save health log</button></div>
+  </div></div>
+ </div>
+ <div id="moneyTab" class="tabpane" style="display:none">
+  <div class="card"><h2>Money snapshot</h2><div class="formgrid">
+   <div><label>Income this month</label><input type="number" id="income"></div>
+   <div><label>Expenses this month</label><input type="number" id="expenses"></div>
+   <div><label>Savings total</label><input type="number" id="savings"></div>
+   <div><label>Savings target</label><input type="number" id="savingsTarget"></div>
+   <div class="full"><button style="width:100%" onclick="saveMoney()">Save money snapshot</button></div>
+  </div></div>
+ </div>
+</section>
+
+<section class="page" id="goals">
+ <div class="card"><div class="sectionTitle"><div><h2>Goals & milestones</h2><div class="muted small">Track measurable progress across your life.</div></div><button onclick="openGoalModal()">+ Goal</button></div><div id="goalList" class="stack"></div></div>
+</section>
+
+<section class="page" id="insights">
+ <div class="grid2">
+  <div class="card"><h2>30-day consistency</h2><div class="big" id="consistency">0%</div><div class="bar"><div id="consistencyBar" class="fill"></div></div></div>
+  <div class="card"><h2>Check-in averages</h2><div class="grid3"><div class="metric"><b id="avgMood">—</b><span>Mood</span></div><div class="metric"><b id="avgEnergy">—</b><span>Energy</span></div><div class="metric"><b id="avgFocus">—</b><span>Focus</span></div></div></div>
+ </div>
+ <div class="card"><h2>Current trends</h2><div id="trendList" class="stack"></div></div>
+</section>
+
+<section class="page" id="character">
+ <div class="card"><h2>Your character</h2><div class="avatarStage"><div class="avatar">
+    <div class="hair" data-hair></div><div class="head"></div><div class="brow l"></div><div class="brow r"></div><div class="eye l"></div><div class="eye r"></div><div class="mouth"></div><div class="beard" data-beard></div><div class="glasses" data-glasses><i></i></div><div class="hat" data-hat></div><div class="body"></div><div class="legs"></div><div class="badge" data-badge></div>
+ </div></div></div>
+ <div class="card"><h2>Customize</h2><div class="formgrid">
+  <div><label>Skin</label><select id="skin" onchange="saveAvatar()"><option value="#f6d0b3">Light</option><option value="#e9b98e">Warm</option><option value="#c98962">Tan</option><option value="#9d6545">Brown</option><option value="#6e4534">Deep</option></select></div>
+  <div><label>Hair color</label><select id="hairColor" onchange="saveAvatar()"><option value="#1e1b1a">Black</option><option value="#4b2d1f">Brown</option><option value="#b98a4c">Blond</option><option value="#773c2e">Auburn</option><option value="#d7d7df">Silver</option><option value="#e58db2">Pink</option></select></div>
+  <div><label>Hair style</label><select id="hairStyle" onchange="saveAvatar()"><option value="">Classic</option><option value="spiky">Spiky</option><option value="side">Side swept</option><option value="buzz">Buzz</option></select></div>
+  <div><label>Shirt</label><select id="shirt" onchange="saveAvatar()"><option value="#f3aac8">Pink</option><option value="#eceff5">White</option><option value="#20242d">Black</option><option value="#5b84d7">Blue</option><option value="#65b887">Green</option><option value="#9c73d6">Purple</option></select></div>
+  <div><label>Pants</label><select id="pants" onchange="saveAvatar()"><option value="#222834">Charcoal</option><option value="#101116">Black</option><option value="#315a8d">Denim</option><option value="#c8c8c4">Light</option></select></div>
+  <div><label>Glasses</label><select id="glasses" onchange="saveAvatar()"><option value="0">None</option><option value="1">Glasses</option></select></div>
+  <div><label>Hat</label><select id="hat" onchange="saveAvatar()"><option value="0">None</option><option value="1">Cap</option></select></div>
+  <div><label>Beard</label><select id="beard" onchange="saveAvatar()"><option value="0">None</option><option value="1">Beard</option></select></div>
+ </div></div>
+</section>
+
+<section class="page" id="settings">
+ <div class="card"><h2>Backup & restore</h2><p class="muted small">Your data is stored locally on this device. Export backups regularly.</p><div class="controls"><button onclick="exportData()">Export backup</button><label class="btn secondary">Import backup<input type="file" id="importFile" accept=".json" style="display:none"></label></div></div>
+ <div class="card"><h2>Reset</h2><p class="muted small">Deletes all app data from this browser/device.</p><button class="danger" onclick="resetAll()">Delete all data</button></div>
+</section>
+</div>
+
+<div class="nav"><div class="navin">
+<button class="active" data-page="home">Home</button><button data-page="planner">Planner</button><button data-page="track">Track</button><button data-page="goals">Goals</button><button data-page="insights">Insights</button><button data-page="character">Character</button><button data-page="settings">Settings</button>
+</div></div>
+
+<div class="modal" id="goalModal"><div class="modalbox">
+ <div class="row" style="margin-bottom:12px"><h2 style="margin:0">New goal</h2><button class="secondary" onclick="closeGoalModal()">✕</button></div>
+ <div class="formgrid">
+  <div class="full"><label>Goal name</label><input id="goalName"></div>
+  <div><label>Category</label><select id="goalCat"><option>Career</option><option>Money</option><option>Health</option><option>Learning</option><option>Productivity</option><option>Personal</option></select></div>
+  <div><label>Deadline</label><input id="goalDeadline" type="date"></div>
+  <div><label>Current</label><input id="goalCurrent" type="number" value="0"></div>
+  <div><label>Target</label><input id="goalTarget" type="number" value="100"></div>
+  <div class="full"><label>Unit</label><input id="goalUnit" placeholder="applications, QAR, lessons, %, etc."></div>
+  <div class="full"><button style="width:100%" onclick="addGoal()">Add goal</button></div>
+ </div>
+</div></div>
+
+<div class="modal" id="taskModal"><div class="modalbox">
+ <div class="row" style="margin-bottom:12px"><h2 style="margin:0">Add schedule item</h2><button class="secondary" onclick="closeTaskModal()">✕</button></div>
+ <div class="formgrid">
+   <div class="full"><label>Title</label><input id="taskTitle" placeholder="e.g. Workout, meeting, pay bills"></div>
+   <div><label>Start time</label><input id="taskStart" type="time"></div>
+   <div><label>End time</label><input id="taskEnd" type="time"></div>
+   <div><label>Category</label><select id="taskCategory"><option>Career</option><option>Money</option><option>Health</option><option>Learning</option><option>Productivity</option><option>Personal</option></select></div>
+   <div><label>Priority</label><select id="taskPriority"><option value="normal">Normal</option><option value="high">High</option><option value="low">Low</option></select></div>
+   <div class="full"><label>Notes</label><textarea id="taskNotes" placeholder="Optional details"></textarea></div>
+   <div class="full"><button style="width:100%" onclick="addTask()">Add to schedule</button></div>
+ </div>
+</div></div>
+
+<script>
+const KEY="life_tracker_v4";
+const seed={
+ habits:[
+   {id:1,name:"Top priority task",category:"Productivity"},
+   {id:2,name:"Learn something useful",category:"Learning"},
+   {id:3,name:"Move / exercise",category:"Health"}
+ ],
+ habitLogs:{},smoke:{},smokeGoal:0,food:{},calGoal:2000,checkins:{},health:{},
+ money:{income:0,expenses:0,savings:0,target:0},
+ goals:[],schedule:{},
+ avatar:{skin:"#e9b98e",hairColor:"#1e1b1a",hairStyle:"",shirt:"#f3aac8",pants:"#222834",glasses:"0",hat:"0",beard:"0"}
+};
+let db=load();
+let calView=new Date();
+let selectedDate=today();
+
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function load(){try{let x=JSON.parse(localStorage.getItem(KEY));return x?Object.assign(clone(seed),x):clone(seed)}catch(e){return clone(seed)}}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function today(){return new Date().toISOString().slice(0,10)}
+function dayKey(offset=0){let d=new Date();d.setDate(d.getDate()+offset);return d.toISOString().slice(0,10)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function pct(n){return Math.max(0,Math.min(100,Math.round(n||0)))}
+function niceDate(k){let d=new Date(k+"T12:00:00");return d.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}
+document.getElementById("dateLabel").textContent=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>openPage(b.dataset.page));
+function openPage(id){document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelector(`[data-page="${id}"]`).classList.add("active");scrollTo(0,0);render()}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".tabpane").forEach(x=>x.style.display="none");document.getElementById(b.dataset.tab+"Tab").style.display="block";render()});
+
+function habitDone(d=today()){let l=db.habitLogs[d]||{};return db.habits.filter(h=>l[h.id]).length}
+function toggleHabit(id){db.habitLogs[today()]=db.habitLogs[today()]||{};db.habitLogs[today()][id]=!db.habitLogs[today()][id];save()}
+function addHabitPrompt(){let n=prompt("Habit name:");if(n&&n.trim()){let c=prompt("Category: Career, Money, Health, Learning, Productivity, or Personal","Productivity")||"Productivity";db.habits.push({id:Date.now(),name:n.trim(),category:c});save()}}
+function deleteHabit(id){if(confirm("Delete this habit?")){db.habits=db.habits.filter(h=>h.id!==id);save()}}
+
+function smokeCount(d=today()){return db.smoke[d]||0}
+function addSmoke(){db.smoke[today()]=smokeCount()+1;save()}
+function removeSmoke(){db.smoke[today()]=Math.max(0,smokeCount()-1);save()}
+function saveSmokeGoal(){db.smokeGoal=Math.max(0,+document.getElementById("smokeGoal").value||0);save()}
+
+function calTotal(d=today()){return (db.food[d]||[]).reduce((s,x)=>s+x.c,0)}
+function addFood(){let n=document.getElementById("foodName").value.trim()||"Food",c=Math.max(0,+document.getElementById("foodCals").value||0);if(!c)return;db.food[today()]=db.food[today()]||[];db.food[today()].push({id:Date.now(),name:n,c});document.getElementById("foodName").value="";document.getElementById("foodCals").value="";save()}
+function removeFood(id){db.food[today()]=(db.food[today()]||[]).filter(x=>x.id!==id);save()}
+function saveCalGoal(){db.calGoal=Math.max(0,+document.getElementById("calGoal").value||0);save()}
+
+function saveCheckin(){db.checkins[today()]={mood:num10("mood"),energy:num10("energy"),focus:num10("focus"),sleep:Math.max(0,+document.getElementById("sleep").value||0),note:document.getElementById("note").value.trim()};save()}
+function num10(id){let n=+document.getElementById(id).value;return n?Math.max(1,Math.min(10,n)):null}
+function saveHealth(){db.health[today()]={weight:+document.getElementById("weight").value||0,steps:+document.getElementById("steps").value||0,exercise:+document.getElementById("exercise").value||0,water:+document.getElementById("water").value||0};save()}
+function saveMoney(){db.money={income:+document.getElementById("income").value||0,expenses:+document.getElementById("expenses").value||0,savings:+document.getElementById("savings").value||0,target:+document.getElementById("savingsTarget").value||0};save()}
+
+function openGoalModal(){document.getElementById("goalModal").classList.add("open")}
+function closeGoalModal(){document.getElementById("goalModal").classList.remove("open")}
+function addGoal(){let n=document.getElementById("goalName").value.trim();if(!n)return;db.goals.push({id:Date.now(),name:n,category:document.getElementById("goalCat").value,deadline:document.getElementById("goalDeadline").value,current:+document.getElementById("goalCurrent").value||0,target:+document.getElementById("goalTarget").value||100,unit:document.getElementById("goalUnit").value.trim()||"units"});closeGoalModal();save()}
+function setGoal(id){let g=db.goals.find(x=>x.id===id);let v=prompt(`Set current ${g.unit}:`,g.current);if(v!==null&&!isNaN(+v)){g.current=Math.max(0,+v);save()}}
+function deleteGoal(id){if(confirm("Delete this goal?")){db.goals=db.goals.filter(x=>x.id!==id);save()}}
+
+function openTaskModal(){document.getElementById("taskModal").classList.add("open")}
+function closeTaskModal(){document.getElementById("taskModal").classList.remove("open")}
+function addTask(){
+ let title=document.getElementById("taskTitle").value.trim(); if(!title)return;
+ let arr=db.schedule[selectedDate]=db.schedule[selectedDate]||[];
+ arr.push({id:Date.now(),title,start:document.getElementById("taskStart").value,end:document.getElementById("taskEnd").value,category:document.getElementById("taskCategory").value,priority:document.getElementById("taskPriority").value,notes:document.getElementById("taskNotes").value.trim(),done:false});
+ arr.sort((a,b)=>(a.start||"99:99").localeCompare(b.start||"99:99"));
+ ["taskTitle","taskStart","taskEnd","taskNotes"].forEach(id=>document.getElementById(id).value="");
+ closeTaskModal();save()
+}
+function toggleTask(id){
+ let t=(db.schedule[selectedDate]||[]).find(x=>x.id===id);if(t){t.done=!t.done;save()}
+}
+function deleteTask(id){
+ if(confirm("Delete this schedule item?")){db.schedule[selectedDate]=(db.schedule[selectedDate]||[]).filter(x=>x.id!==id);save()}
+}
+function scheduleStats(d=today()){
+ let a=db.schedule[d]||[];return {done:a.filter(x=>x.done).length,total:a.length}
+}
+function changeMonth(n){calView.setMonth(calView.getMonth()+n);renderCalendar()}
+function selectDate(k){selectedDate=k;renderCalendar();renderSchedule()}
+
+function renderCalendar(){
+ let y=calView.getFullYear(),m=calView.getMonth();
+ document.getElementById("calendarTitle").textContent=new Date(y,m,1).toLocaleDateString(undefined,{month:"long",year:"numeric"});
+ let first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+ let html=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(x=>`<div class="dow">${x}</div>`).join("");
+ for(let i=0;i<first;i++)html+=`<div class="day empty"></div>`;
+ for(let d=1;d<=days;d++){
+   let k=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+   let has=(db.schedule[k]||[]).length>0;
+   html+=`<div class="day ${k===today()?"today":""} ${k===selectedDate?"selected":""}" onclick="selectDate('${k}')"><div class="num">${d}</div>${has?'<div class="dot"></div>':''}</div>`;
+ }
+ document.getElementById("calendarGrid").innerHTML=html;
+}
+function renderSchedule(){
+ document.getElementById("selectedDateTitle").textContent=niceDate(selectedDate);
+ let arr=db.schedule[selectedDate]||[];
+ document.getElementById("scheduleList").innerHTML=arr.length?arr.map(t=>`<div class="schedule-item ${t.done?"done":""}">
+   <div class="time">${t.start||"Anytime"}${t.end?`<div class="small muted">to ${t.end}</div>`:""}</div>
+   <div onclick="toggleTask(${t.id})" style="cursor:pointer"><div class="task-title">${t.done?"✓ ":""}${esc(t.title)}</div><div class="task-meta">${esc(t.category)}${t.notes?` • ${esc(t.notes)}`:""}</div></div>
+   <div class="stack" style="gap:5px"><span class="priority ${t.priority}">${t.priority}</span><button class="ghost" onclick="deleteTask(${t.id})">×</button></div>
+ </div>`).join(""):`<div class="muted small">Nothing scheduled for this day.</div>`;
+}
+
+function pillarScores(){
+ const cats=["Career","Money","Health","Learning","Productivity","Personal"], out={};
+ cats.forEach(cat=>{
+  let hs=db.habits.filter(h=>(h.category||"").toLowerCase()===cat.toLowerCase());let hscore=hs.length?hs.filter(h=>(db.habitLogs[today()]||{})[h.id]).length/hs.length*100:null;
+  let gs=db.goals.filter(g=>g.category===cat);let gscore=gs.length?gs.reduce((s,g)=>s+pct(g.current/g.target*100),0)/gs.length:null;
+  let ss=(db.schedule[today()]||[]).filter(t=>t.category===cat);let sscore=ss.length?ss.filter(t=>t.done).length/ss.length*100:null;
+  let vals=[hscore,gscore,sscore].filter(x=>x!==null);out[cat]=vals.length?pct(vals.reduce((a,b)=>a+b,0)/vals.length):0;
+ });
+ return out;
+}
+function dailyScore(d=today()){
+ let h=db.habits.length?habitDone(d)/db.habits.length*35:0;
+ let sched=scheduleStats(d); let sch=sched.total?sched.done/sched.total*25:0;
+ let smoke=15;if(db.smokeGoal>0) smoke=smokeCount(d)<=db.smokeGoal?15:Math.max(0,15-(smokeCount(d)-db.smokeGoal)*3);
+ let cal=10;if(db.calGoal>0){let diff=Math.abs(calTotal(d)-db.calGoal)/db.calGoal;cal=Math.max(0,10-diff*10)}
+ let c=db.checkins[d];let wellness=c?((c.mood||0)+(c.energy||0)+(c.focus||0))/30*15:0;
+ return pct(h+sch+smoke+cal+wellness)
+}
+function avgLast(arrKey,field,days=30){let vals=[];for(let i=0;i<days;i++){let d=dayKey(-i),o=db[arrKey][d];if(o&&o[field])vals.push(+o[field])}return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):"—"}
+function meanRange(getter,start,count){let a=[];for(let i=start;i<start+count;i++){let v=getter(dayKey(-i));if(v!==null&&v!==undefined)a.push(+v)}return a.length?a.reduce((x,y)=>x+y,0)/a.length:null}
+function trendLabel(now,prev,lowerBetter=false){if(prev===null||now===null)return "Not enough data yet";let diff=now-prev;if(Math.abs(diff)<0.01)return "Stable";let good=lowerBetter?diff<0:diff>0;return `${diff>0?"↑":"↓"} ${Math.abs(diff).toFixed(1)} ${good?"improving":"needs attention"}`}
+
+function saveAvatar(){["skin","hairColor","hairStyle","shirt","pants","glasses","hat","beard"].forEach(k=>db.avatar[k]=document.getElementById(k).value);save()}
+function applyAvatar(){
+ document.documentElement.style.setProperty("--skin",db.avatar.skin);document.documentElement.style.setProperty("--hair",db.avatar.hairColor);document.documentElement.style.setProperty("--shirt",db.avatar.shirt);document.documentElement.style.setProperty("--pants",db.avatar.pants);document.documentElement.style.setProperty("--hat",db.avatar.shirt);
+ document.querySelectorAll("[data-hair]").forEach(x=>x.className="hair "+db.avatar.hairStyle);
+ document.querySelectorAll("[data-glasses]").forEach(x=>x.className="glasses "+(db.avatar.glasses==="1"?"on":""));
+ document.querySelectorAll("[data-hat]").forEach(x=>x.className="hat "+(db.avatar.hat==="1"?"on":""));
+ document.querySelectorAll("[data-beard]").forEach(x=>x.className="beard "+(db.avatar.beard==="1"?"on":""));
+ document.querySelectorAll("[data-badge]").forEach(x=>x.className="badge "+(dailyScore()>=80?"on":""));
+ ["skin","hairColor","hairStyle","shirt","pants","glasses","hat","beard"].forEach(k=>document.getElementById(k).value=db.avatar[k])
+}
+
+function render(){
+ let sc=dailyScore(), c=db.checkins[today()]||{}, h=db.health[today()]||{}, ss=scheduleStats();
+ document.getElementById("score").textContent=sc;document.getElementById("scoreBar").style.width=sc+"%";
+ document.getElementById("coach").textContent=sc>=80?"Strong day. Your character earned a progress badge.":sc>=55?"Good momentum. Complete one more meaningful item.":"Focus on one small action you can finish today.";
+ document.getElementById("smokeHome").textContent=smokeCount();document.getElementById("calHome").textContent=calTotal();document.getElementById("habitHome").textContent=habitDone()+"/"+db.habits.length;document.getElementById("scheduleHome").textContent=ss.done+"/"+ss.total;
+ let ps=pillarScores();document.getElementById("pillarGrid").innerHTML=Object.entries(ps).map(([k,v])=>`<div class="metric"><b>${v}%</b><span>${k}</span><div class="bar" style="margin-top:8px"><div class="fill" style="width:${v}%"></div></div></div>`).join("");
+ let agenda=(db.schedule[today()]||[]).slice(0,5);document.getElementById("agendaPreview").innerHTML=agenda.length?agenda.map(t=>`<div class="schedule-item ${t.done?"done":""}"><div class="time">${t.start||"Anytime"}</div><div><div class="task-title">${t.done?"✓ ":""}${esc(t.title)}</div><div class="task-meta">${esc(t.category)}</div></div><span class="priority ${t.priority}">${t.priority}</span></div>`).join(""):`<div class="muted small">No schedule yet. Add items in Planner.</div>`;
+ let bars=[];for(let i=6;i>=0;i--){let d=new Date();d.setDate(d.getDate()-i);let k=d.toISOString().slice(0,10),v=dailyScore(k);bars.push(`<div class="col"><div class="v" style="height:${Math.max(2,v)}%"></div><span>${d.toLocaleDateString(undefined,{weekday:"short"}).slice(0,2)}</span></div>`)}document.getElementById("weekChart").innerHTML=bars.join("");
+ document.getElementById("habitList").innerHTML=db.habits.length?db.habits.map(h=>{let d=!!(db.habitLogs[today()]||{})[h.id];return `<div class="metric row"><div onclick="toggleHabit(${h.id})" style="flex:1;cursor:pointer"><b style="font-size:16px">${d?"✓ ":""}${esc(h.name)}</b><span>${esc(h.category||"General")} • ${d?"Done":"Tap to complete"}</span></div><button class="secondary" onclick="deleteHabit(${h.id})">×</button></div>`}).join(""):`<div class="muted small">No habits yet.</div>`;
+ ["mood","energy","focus","sleep"].forEach(id=>document.getElementById(id).value=c[id]??"");document.getElementById("note").value=c.note||"";
+ document.getElementById("smokeBig").textContent=smokeCount();document.getElementById("smokeGoal").value=db.smokeGoal||"";document.getElementById("smokeBar").style.width=(db.smokeGoal?Math.min(100,smokeCount()/db.smokeGoal*100):0)+"%";document.getElementById("smokeNote").textContent=db.smokeGoal?(smokeCount()<=db.smokeGoal?`${db.smokeGoal-smokeCount()} remaining before your daily limit.`:`${smokeCount()-db.smokeGoal} above your daily limit.`):"Set a number if you want to track reduction.";
+ let sh=[];for(let i=6;i>=0;i--){let d=new Date();d.setDate(d.getDate()-i);let k=d.toISOString().slice(0,10);sh.push(`<div class="row"><span class="muted small">${d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})}</span><b>${smokeCount(k)}</b></div>`)}document.getElementById("smokeHistory").innerHTML=sh.join("");
+ document.getElementById("calGoal").value=db.calGoal||"";document.getElementById("calBig").textContent=calTotal();document.getElementById("calBar").style.width=(db.calGoal?Math.min(100,calTotal()/db.calGoal*100):0)+"%";document.getElementById("foodLog").innerHTML=(db.food[today()]||[]).length?(db.food[today()]||[]).map(x=>`<div class="log"><div><b>${esc(x.name)}</b><div class="small muted">${x.c} kcal</div></div><button class="secondary" onclick="removeFood(${x.id})">Remove</button></div>`).join(""):`<div class="muted small">No food logged yet.</div>`;
+ ["weight","steps","exercise","water"].forEach(id=>document.getElementById(id).value=h[id]||"");
+ document.getElementById("income").value=db.money.income||"";document.getElementById("expenses").value=db.money.expenses||"";document.getElementById("savings").value=db.money.savings||"";document.getElementById("savingsTarget").value=db.money.target||"";
+ document.getElementById("goalList").innerHTML=db.goals.length?db.goals.map(g=>{let p=pct(g.current/g.target*100);return `<div class="goal"><div class="row"><div><b>${esc(g.name)}</b><div class="small muted">${esc(g.category)}${g.deadline?" • "+g.deadline:""}</div></div><b>${p}%</b></div><div class="bar" style="margin:9px 0"><div class="fill" style="width:${p}%"></div></div><div class="row"><span class="small muted">${g.current} / ${g.target} ${esc(g.unit)}</span><div class="controls"><button class="secondary" onclick="setGoal(${g.id})">Set</button><button class="ghost" onclick="deleteGoal(${g.id})">Delete</button></div></div></div>`}).join(""):`<div class="muted small">No goals yet.</div>`;
+ let poss=db.habits.length*30,done=0;for(let i=0;i<30;i++)done+=habitDone(dayKey(-i));let cons=poss?pct(done/poss*100):0;document.getElementById("consistency").textContent=cons+"%";document.getElementById("consistencyBar").style.width=cons+"%";
+ document.getElementById("avgMood").textContent=avgLast("checkins","mood");document.getElementById("avgEnergy").textContent=avgLast("checkins","energy");document.getElementById("avgFocus").textContent=avgLast("checkins","focus");
+ let sNow=meanRange(smokeCount,0,7),sPrev=meanRange(smokeCount,7,7),pNow=meanRange(d=>dailyScore(d),0,7),pPrev=meanRange(d=>dailyScore(d),7,7);
+ let schNow=meanRange(d=>{let x=scheduleStats(d);return x.total?x.done/x.total*100:0},0,7),schPrev=meanRange(d=>{let x=scheduleStats(d);return x.total?x.done/x.total*100:0},7,7);
+ document.getElementById("trendList").innerHTML=`<div class="metric"><b style="font-size:16px">Overall progress</b><span>${trendLabel(pNow,pPrev,false)}</span></div><div class="metric"><b style="font-size:16px">Schedule completion</b><span>${trendLabel(schNow,schPrev,false)}</span></div><div class="metric"><b style="font-size:16px">Smoking</b><span>${trendLabel(sNow,sPrev,true)}</span></div>`;
+ applyAvatar();renderCalendar();renderSchedule()
+}
+function exportData(){let b=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`life-tracker-backup-${today()}.json`;a.click()}
+document.getElementById("importFile").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{db=Object.assign(clone(seed),JSON.parse(r.result));save();alert("Backup imported.")}catch(x){alert("Invalid backup file.")}};r.readAsText(f)}
+function resetAll(){if(confirm("Delete ALL Life Tracker data from this device?")){db=clone(seed);localStorage.removeItem(KEY);save()}}
+if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./service-worker.js");
+render();
+</script>
+</body>
+</html>
